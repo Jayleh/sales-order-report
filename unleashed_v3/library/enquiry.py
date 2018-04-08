@@ -2,6 +2,7 @@
 import sys
 import datetime as dt
 import pandas as pd
+import numpy as np
 from library.authorize.config import api_id, api_key
 from library.authorize.api import UnleashedApi
 
@@ -70,6 +71,66 @@ def pick_enquiry():
             # break
         else:
             print("Uh oh. There was probably a misspelling. Please try again.\n")
+
+
+def run_order(product_df):
+    # Potential user response lists
+    yes_list = ["yes", "y", "yep", "yeah", "yea", "sure",
+                "ya", "yah", "ye", "affirmative", "absolutely"]
+    no_list = ["no", "n", "na", "nah", "nope", "never", "no way", "nein"]
+    so_responses = ["so", "sale", "sales", "salesorders", "saleorder", "salesorder"]
+    po_responses = ["po", "purchase", "purchases", "purchaseorders", "purch", "pos"]
+    both = ["both", "all", "two", "everything"]
+
+    ask_order = True
+
+    while ask_order:
+        # Ask to get order quantities
+        response = input("\nDo you want to get quantities on orders? (yes/no): ")
+
+        if response in yes_list:
+
+            choice = True
+
+            while choice:
+                # User input to choose what enquiry to run
+                enquiry = input(
+                    "Which enquiry do you want to run: Sales Orders, Purchase Orders, or Both? ")
+
+                # Canonicalize enquiry
+                enquiry = enquiry.replace(" ", "").lower()
+
+                # if enquiry in so_responses:
+                #     # Run Bill Of Materials Program
+                #     # print("\nAwesome! Now sifting through Unleashed. This may take a minute.")
+                #     get_bom(product_df)
+                #     choice = False
+                #     ask_order = Falsereak
+                if enquiry in po_responses:
+                    # Run Stock On Hand Program
+                    # print("\nAwesome! Now sifting through Unleashed. This may take a minute.")
+                    get_purchases(product_df)
+                    choice = False
+                    ask_order = False
+                # elif enquiry in both:
+                #     # Run Product Description Program
+                #     # print("\nAwesome! Now sifting through Unleashed. This may take a minute.")
+                #     get_des(product_df)
+                #     choice = False
+                #     ask_order = False
+                else:
+                    print("Uh oh. There was probably a misspelling. Please try again.\n")
+
+        elif response in no_list:
+            # Run export_to_excel function to grab final file
+            export_to_excel(product_df)
+
+        elif (response not in no_list) and (response not in yes_list):
+            print("It was a yes or no question. Try again.\n")
+
+        else:
+            print("Umm. Something went wrong. Imma dip, peace out.")
+            break
 
 
 '''
@@ -277,7 +338,18 @@ def get_soh(product_df):
     product_df = product_df[["Product Code", "Description", "Quantity On Hand"]]
 
     # Run export_to_excel function to grab final file
-    export_to_excel(product_df)
+    # export_to_excel(product_df)
+
+    # Return product_df
+    # return product_df
+
+    # Run run_order function
+    run_order(product_df)
+
+
+'''
+Below contains get purchases program.
+'''
 
 
 def get_purchases(product_df):
@@ -345,8 +417,12 @@ def get_purchases(product_df):
 
         for key, order_quantity_list in order_quantity_dict.items():
 
-            if product == key:
+            if product == "—":
+                # Insert quantity at index
+                product_df.at[product_df.index[i],
+                              "Quantity On Purchase"] = np.nan
 
+            elif product == key:
                 # Insert quantity at index
                 product_df.at[product_df.index[i],
                               "Quantity On Purchase"] = sum(order_quantity_list)
@@ -356,7 +432,7 @@ def get_purchases(product_df):
                              "Quantity On Hand", "Quantity On Purchase"]]
 
     # Run export_to_excel function to grab final file
-    # export_to_excel(product_df)
+    export_to_excel(product_df)
 
     # Return product_df
-    return product_df
+    # return product_df
