@@ -56,12 +56,12 @@ def pick_enquiry():
         if enquiry in bom_responses:
             # Run Bill Of Materials Program
             print("\nAwesome! Now sifting through Unleashed. This may take a minute.")
-            convert_bom(product_df)
+            get_bom(product_df)
             break
         elif enquiry in soh_responses:
             # Run Stock On Hand Program
             print("\nAwesome! Now sifting through Unleashed. This may take a minute.")
-            convert_soh(product_df)
+            get_soh(product_df)
             break
         # elif enquiry in des_responses:
             # Run Product Description Program
@@ -85,7 +85,7 @@ def export_to_excel(dataframe):
         # Save as csv
         dataframe.to_excel(f"unl_enquiry/{today}_unl_{excel_file_name}.xlsx", index=False)
     except PermissionError:
-        print("Oh no. You have the file already open! Close it and try again.")
+        print("Oh no. You already have the file open! Close it and try again.")
     except:
         raise
 
@@ -112,11 +112,17 @@ def get_des(product_df):
     # Authorize and connect to api
     auth = UnleashedApi(api_url, api_id, api_key)
 
-    # Paginate through 5 pages
-    for x in range(5):
+    # Keep track of number of items
+    item_count = 0
+
+    # Paginate through arbitrary large number
+    for x in range(100):
 
         # Get response
         products = auth.get_request(method=f"Products/{x+1}?").json()
+
+        # Add number of orders to item count
+        item_count += len(products["Items"])
 
         for item in products["Items"]:
 
@@ -126,6 +132,10 @@ def get_des(product_df):
 
                     # product_df.iat[i, 1] = item["ProductDescription"]
                     product_df.at[product_df.index[i], "Description"] = item["ProductDescription"]
+
+        # Break loop if item_count hits max number of orders
+        if item_count == products["Pagination"]["NumberOfItems"]:
+            break
 
     # Return product_df
     return product_df
@@ -149,7 +159,7 @@ def get_bom_response():
     return bills_of_materials
 
 
-def convert_bom(product_df):
+def get_bom(product_df):
 
     # Run get_bom_response function
     print("\nExtracting bills of materials...")
@@ -207,57 +217,146 @@ def convert_bom(product_df):
     # Create bom dataframe
     bom_df = pd.DataFrame({"Product Code": full_bom_list})
 
-    # Run convert_soh function to grab descriptions and stock counts
-    convert_soh(bom_df)
+    # Run get_soh function to grab descriptions and stock counts
+    get_soh(bom_df)
 
 
 '''
-Below contains stock on hand program. 
+Below contains stock on hand program.
 '''
 
 
-def get_soh_response():
+def get_soh(product_df):
+    # Grab product descriptions
+    get_des(product_df)
+
     # Unleashed api base url
     api_url = "https://api.unleashedsoftware.com"
 
     # Authorize and connect to api
     auth = UnleashedApi(api_url, api_id, api_key)
 
-    # Get response
-    stock_on_hand = auth.get_request(method="StockOnHand/1?pageSize=1000").json()
-
-    return stock_on_hand
-
-
-def convert_soh(product_df):
-    # Grab product descriptions
-    get_des(product_df)
-
-    # Run get_soh_response function
-    print("\nNow sending someone to count the stock by hand...lol jk")
-    stock_on_hand = get_soh_response()
-
     # Add new blank column
     product_df["Quantity On Hand"] = ""
 
-    # Grab list of product to enquire
-    product_list = product_df["Product Code"]
+    print("\nNow sending someone to count the stock by hand...lol jk")
 
-    # Grab quantity on hand from api response
-    for i, product in enumerate(product_list):
-        for item in stock_on_hand["Items"]:
-            if product == item["ProductCode"]:
-                try:
-                    # df.set_value() is deprecated
-                    # product_df.set_value(i, "Quantity On Hand", item["QtyOnHand"])
-                    # product_df.iat[i, 1] = item["QtyOnHand"]
-                    product_df.at[product_df.index[i], "Quantity On Hand"] = item["QtyOnHand"]
-                except Exception as e:
-                    print(e)
-                    continue
+    # Keep track of number of items
+    item_count = 0
+
+    # Paginate through arbitrary large number
+    for x in range(100):
+
+        # Get response
+        stock_on_hand = auth.get_request(method=f"StockOnHand/{x+1}?").json()
+
+        # Add number of orders to item count
+        item_count += len(stock_on_hand["Items"])
+
+        # Grab list of product to enquire
+        product_list = product_df["Product Code"]
+
+        # Grab quantity on hand from api response
+        for i, product in enumerate(product_list):
+            for item in stock_on_hand["Items"]:
+                if product == item["ProductCode"]:
+                    try:
+                        # df.set_value() is deprecated
+                        # product_df.set_value(i, "Quantity On Hand", item["QtyOnHand"])
+                        # product_df.iat[i, 1] = item["QtyOnHand"]
+                        product_df.at[product_df.index[i], "Quantity On Hand"] = item["QtyOnHand"]
+                    except Exception as e:
+                        print(e)
+                        continue
+
+        # Break loop if item_count hits max number of orders
+        if item_count == stock_on_hand["Pagination"]["NumberOfItems"]:
+            break
 
     # Reorder columns
     product_df = product_df[["Product Code", "Description", "Quantity On Hand"]]
 
     # Run export_to_excel function to grab final file
     export_to_excel(product_df)
+
+
+def get_purchases(product_df):
+
+    # Run get_des_response function
+    print("\nGrabbing order quantities on purchase...")
+
+    # Unleashed api base url
+    api_url = "https://api.unleashedsoftware.com"
+
+    # Authorize and connect to api
+    auth = UnleashedApi(api_url, api_id, api_key)
+
+    # Create dictionary to hold order quantities for each product
+    order_quantity_dict = {}
+
+    # Append each product in product_df to order_quantity_dict as dictionaries
+    for product in product_df["Product Code"]:
+        # Add product as key with the value as a list
+        order_quantity_dict[product] = []
+
+    # Debug statement
+    # print(order_quantity_dict)
+
+    # Keep track of number of items
+    item_count = 0
+
+    # Paginate through arbitrary large number
+    for x in range(100):
+
+        # Get response
+        purchase_orders = auth.get_request(method=f"PurchaseOrders/{x+1}?").json()
+
+        # Add number of orders to item count
+        item_count += len(purchase_orders["Items"])
+
+        # Debug statements
+        # print("Length of page: {}".format(len(purchase_orders["Items"])))
+        # print(f"Total item count: {item_count}")
+
+        for product, order_quantity_list in order_quantity_dict.items():
+
+            for order in purchase_orders["Items"]:
+
+                if order["OrderStatus"] != "Complete":
+
+                    for line in order["PurchaseOrderLines"]:
+
+                        if line["Product"]["ProductCode"] == product:
+
+                            # Append order quantity to list in order quantity dictionary
+                            order_quantity_list.append(line["OrderQuantity"])
+
+        # Break loop if item_count hits max number of orders
+        if item_count == purchase_orders["Pagination"]["NumberOfItems"]:
+            break
+
+    # Debug statement
+    # print(order_quantity_dict)
+
+    # Add new blank column
+    product_df["Quantity On Purchase"] = ""
+
+    for i, product in enumerate(product_df["Product Code"]):
+
+        for key, order_quantity_list in order_quantity_dict.items():
+
+            if product == key:
+
+                # Insert quantity at index
+                product_df.at[product_df.index[i],
+                              "Quantity On Purchase"] = sum(order_quantity_list)
+
+    # Reorder columns
+    product_df = product_df[["Product Code", "Description",
+                             "Quantity On Hand", "Quantity On Purchase"]]
+
+    # Run export_to_excel function to grab final file
+    # export_to_excel(product_df)
+
+    # Return product_df
+    return product_df
