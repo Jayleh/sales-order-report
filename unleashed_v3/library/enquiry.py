@@ -8,6 +8,11 @@ from library.authorize.api import UnleashedApi
 
 
 def file_input():
+    """
+    Ask user to type in file name. Convert file to dataframe. Assign both file name and dataframe
+    as global variables.
+    """
+
     file_import = True
     while file_import:
         # User input to get excel file name
@@ -41,6 +46,11 @@ def file_input():
 
 
 def pick_enquiry():
+    """
+    Ask user to run either Bill of Materials or Stock On Hand. Run respective request
+    based on choice.
+    """
+
     # Potential user response lists
     bom_responses = ["bom", "boms", "billofmaterials", "bill", "bills"]
     soh_responses = ["soh", "stockonhand", "stock", "stocks", "quantity"]
@@ -74,9 +84,14 @@ def pick_enquiry():
 
 
 def pick_order(product_df):
+    """
+    Ask user if they want to request for an order quantity report. Run either sales orders,
+    purchase orders, or both.
+    """
+
     # Potential user response lists
-    yes_list = ["yes", "y", "yep", "yeah", "yea", "sure",
-                "ya", "yah", "ye", "affirmative", "absolutely"]
+    yes_list = ["yes", "y", "yep", "yeah", "yea", "sure", "ya", "yah",
+                "ye", "affirmative", "absolutely", "k", "ok", "kay", "okay"]
     no_list = ["no", "n", "na", "nah", "nope", "never", "no way", "nein"]
     so_responses = ["so", "sale", "sales", "salesorders", "saleorder", "salesorder"]
     po_responses = ["po", "purchase", "purchases", "purchaseorders", "purch", "pos"]
@@ -162,12 +177,10 @@ def pick_order(product_df):
             break
 
 
-'''
-Below exports completed dataframe to an excel file.
-'''
-
-
 def export_to_excel(dataframe):
+    """
+    Exports final dataframe to excel file using global file name.
+    """
     # Grab datetime
     today = dt.datetime.now().strftime(format="%Y%m%d")
 
@@ -186,12 +199,10 @@ def export_to_excel(dataframe):
     print("-" * 40 + "\n")
 
 
-'''
-Below grabs product descriptions and returns a dataframe.
-'''
-
-
 def get_des(product_df):
+    """
+    API request for product descriptions. Adds description column to dataframe.
+    """
 
     # Run get_des_response function
     print("\nGrabbing product descriptions...")
@@ -231,12 +242,11 @@ def get_des(product_df):
     return product_df
 
 
-'''
-Below contains bill of materials program.
-'''
-
-
 def get_bom_response():
+    """
+    API request for bill of materials. Returns all.
+    """
+
     # Unleashed api base url
     api_url = "https://api.unleashedsoftware.com"
 
@@ -250,6 +260,10 @@ def get_bom_response():
 
 
 def get_bom(product_df):
+    """
+    Unzips all bill of materials associated with each product in original excel file.
+    Call stock on hand request. *For loops subject to debugging
+    """
 
     # Run get_bom_response function
     print("\nExtracting bills of materials...")
@@ -317,6 +331,11 @@ Below contains stock on hand program.
 
 
 def get_soh(product_df):
+    """
+    Calls product descriptions request. Adds new column of quantity on hand. Calls pick_order
+    function.
+    """
+
     # Grab product descriptions
     get_des(product_df)
 
@@ -329,7 +348,7 @@ def get_soh(product_df):
     # Add new blank column
     product_df["Quantity On Hand"] = ""
 
-    print("\nNow sending someone to count the stock by hand...lol jk")
+    print("\nCounting stock by hand...")
 
     # Keep track of number of items
     item_count = 0
@@ -376,15 +395,13 @@ def get_soh(product_df):
     pick_order(product_df)
 
 
-'''
-Below contains get sales program.
-'''
-
-
 def get_sales(product_df):
+    """
+    API request for sales order data. Adds sales order quantity column to dataframe.
+    """
 
-    # Run get_des_response function
-    print("\nGrabbing order quantities on sales...")
+    # Debug statement
+    print("\nInserting order quantities on sales orders...")
 
     # Unleashed api base url
     api_url = "https://api.unleashedsoftware.com"
@@ -463,15 +480,13 @@ def get_sales(product_df):
     return product_df
 
 
-'''
-Below contains get purchases program.
-'''
-
-
 def get_purchases(product_df):
+    """
+    API request for purchase orders data. Adds purchase order quantity column to dataframe.
+    """
 
-    # Run get_des_response function
-    print("\nGrabbing order quantities on purchase...")
+    # Debug statement
+    print("\nReading in order quantities on purchase orders...")
 
     # Unleashed api base url
     api_url = "https://api.unleashedsoftware.com"
