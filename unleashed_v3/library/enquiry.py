@@ -73,7 +73,7 @@ def pick_enquiry():
             print("Uh oh. There was probably a misspelling. Please try again.\n")
 
 
-def run_order(product_df):
+def pick_order(product_df):
     # Potential user response lists
     yes_list = ["yes", "y", "yep", "yeah", "yea", "sure",
                 "ya", "yah", "ye", "affirmative", "absolutely"]
@@ -101,23 +101,52 @@ def run_order(product_df):
                 enquiry = enquiry.replace(" ", "").lower()
 
                 if enquiry in so_responses:
-                    # Run Bill Of Materials Program
-                    # print("\nAwesome! Now sifting through Unleashed. This may take a minute.")
-                    get_sales(product_df)
+                    # Get sales order quantities
+                    product_df = get_sales(product_df)
+
+                    # Reorder columns
+                    product_df = product_df[["Product Code", "Description",
+                                             "Quantity On Hand", "Quantity On Sales"]]
+
+                    # Run export_to_excel function to grab final file
+                    export_to_excel(product_df)
+
+                    # Break out of loops
                     choice = False
                     ask_order = False
+
                 elif enquiry in po_responses:
-                    # Run Stock On Hand Program
-                    # print("\nAwesome! Now sifting through Unleashed. This may take a minute.")
-                    get_purchases(product_df)
+                    # Get purchase order quantities
+                    product_df = get_purchases(product_df)
+
+                    # Reorder columns
+                    product_df = product_df[["Product Code", "Description",
+                                             "Quantity On Hand", "Quantity On Purchase"]]
+
+                    # Run export_to_excel function to grab final file
+                    export_to_excel(product_df)
+
+                    # Break out of loops
                     choice = False
                     ask_order = False
-                # elif enquiry in both:
-                #     # Run Product Description Program
-                #     # print("\nAwesome! Now sifting through Unleashed. This may take a minute.")
-                #     get_des(product_df)
-                #     choice = False
-                #     ask_order = False
+
+                elif enquiry in both:
+                    # Run both order quantity functions
+                    product_df = get_sales(product_df)
+                    product_df = get_purchases(product_df)
+
+                    # Reorder columns
+                    product_df = product_df[["Product Code", "Description",
+                                             "Quantity On Hand", "Quantity On Sales",
+                                             "Quantity On Purchase"]]
+
+                    # Run export_to_excel function to grab final file
+                    export_to_excel(product_df)
+
+                    # Break out of loops
+                    choice = False
+                    ask_order = False
+
                 else:
                     print("Uh oh. There was probably a misspelling. Please try again.\n")
 
@@ -343,8 +372,8 @@ def get_soh(product_df):
     # Return product_df
     # return product_df
 
-    # Run run_order function
-    run_order(product_df)
+    # Run pick_order function
+    pick_order(product_df)
 
 
 '''
@@ -430,15 +459,8 @@ def get_sales(product_df):
                 product_df.at[product_df.index[i],
                               "Quantity On Sales"] = sum(order_quantity_list)
 
-    # Reorder columns
-    product_df = product_df[["Product Code", "Description",
-                             "Quantity On Hand", "Quantity On Sales"]]
-
-    # Run export_to_excel function to grab final file
-    export_to_excel(product_df)
-
     # Return product_df
-    # return product_df
+    return product_df
 
 
 '''
@@ -520,12 +542,5 @@ def get_purchases(product_df):
                 product_df.at[product_df.index[i],
                               "Quantity On Purchase"] = sum(order_quantity_list)
 
-    # Reorder columns
-    product_df = product_df[["Product Code", "Description",
-                             "Quantity On Hand", "Quantity On Purchase"]]
-
-    # Run export_to_excel function to grab final file
-    export_to_excel(product_df)
-
     # Return product_df
-    # return product_df
+    return product_df
