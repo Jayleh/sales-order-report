@@ -136,7 +136,7 @@ def pick_order(product_df):
 
                     # Reorder columns
                     product_df = product_df[["Product Code", "Description",
-                                             "Quantity On Hand", "Quantity On Purchase"]]
+                                             "Quantity On Hand", "Quantity On Purchases"]]
 
                     # Run export_to_excel function to grab final file
                     export_to_excel(product_df)
@@ -153,7 +153,7 @@ def pick_order(product_df):
                     # Reorder columns
                     product_df = product_df[["Product Code", "Description",
                                              "Quantity On Hand", "Quantity On Sales",
-                                             "Quantity On Purchase"]]
+                                             "Quantity On Purchases"]]
 
                     # Run export_to_excel function to grab final file
                     export_to_excel(product_df)
@@ -542,7 +542,7 @@ def get_purchases(product_df):
     # print(order_quantity_dict)
 
     # Add new blank column
-    product_df["Quantity On Purchase"] = ""
+    product_df["Quantity On Purchases"] = ""
 
     for i, product in enumerate(product_df["Product Code"]):
 
@@ -550,12 +550,12 @@ def get_purchases(product_df):
 
             if product == "—":
                 # Insert nan at index
-                product_df.at[product_df.index[i], "Quantity On Purchase"] = np.nan
+                product_df.at[product_df.index[i], "Quantity On Purchases"] = np.nan
 
             elif product == key:
                 # Insert quantity at index
                 product_df.at[product_df.index[i],
-                              "Quantity On Purchase"] = sum(order_quantity_list)
+                              "Quantity On Purchases"] = sum(order_quantity_list)
 
     # Return product_df
     return product_df
