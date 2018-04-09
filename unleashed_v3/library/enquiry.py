@@ -100,13 +100,13 @@ def run_order(product_df):
                 # Canonicalize enquiry
                 enquiry = enquiry.replace(" ", "").lower()
 
-                # if enquiry in so_responses:
-                #     # Run Bill Of Materials Program
-                #     # print("\nAwesome! Now sifting through Unleashed. This may take a minute.")
-                #     get_bom(product_df)
-                #     choice = False
-                #     ask_order = Falsereak
-                if enquiry in po_responses:
+                if enquiry in so_responses:
+                    # Run Bill Of Materials Program
+                    # print("\nAwesome! Now sifting through Unleashed. This may take a minute.")
+                    get_sales(product_df)
+                    choice = False
+                    ask_order = False
+                elif enquiry in po_responses:
                     # Run Stock On Hand Program
                     # print("\nAwesome! Now sifting through Unleashed. This may take a minute.")
                     get_purchases(product_df)
@@ -348,6 +348,100 @@ def get_soh(product_df):
 
 
 '''
+Below contains get sales program.
+'''
+
+
+def get_sales(product_df):
+
+    # Run get_des_response function
+    print("\nGrabbing order quantities on sales...")
+
+    # Unleashed api base url
+    api_url = "https://api.unleashedsoftware.com"
+
+    # Authorize and connect to api
+    auth = UnleashedApi(api_url, api_id, api_key)
+
+    # Create dictionary to hold order quantities for each product
+    order_quantity_dict = {}
+
+    # Append each product in product_df to order_quantity_dict as dictionaries
+    for product in product_df["Product Code"]:
+        # Add product as key with the value as a list
+        order_quantity_dict[product] = []
+
+    # Debug statement
+    # print(order_quantity_dict)
+
+    # Create order status variable for query
+    order_status = "Parked,Placed,Backordered"
+
+    # Keep track of number of items
+    item_count = 0
+
+    # Paginate through arbitrary large number
+    for x in range(100):
+
+        # Get response
+        sales_orders = auth.get_request(
+            method=f"SalesOrders/{x+1}?orderStatus={order_status}&pageSize=200").json()
+
+        # Add number of orders to item count
+        item_count += len(sales_orders["Items"])
+
+        # Debug statements
+        # print("Length of page: {}".format(len(purchase_orders["Items"])))
+        # print(f"Total item count: {item_count}")
+
+        for product, order_quantity_list in order_quantity_dict.items():
+
+            for order in sales_orders["Items"]:
+
+                if order["OrderStatus"] != "Complete":
+
+                    for line in order["SalesOrderLines"]:
+
+                        if line["Product"]["ProductCode"] == product:
+
+                            # Append order quantity to list in order quantity dictionary
+                            order_quantity_list.append(line["OrderQuantity"])
+
+        # Break loop if item_count hits max number of orders
+        if item_count == sales_orders["Pagination"]["NumberOfItems"]:
+            break
+
+    # Debug statement
+    # print(order_quantity_dict)
+
+    # Add new blank column
+    product_df["Quantity On Sales"] = ""
+
+    for i, product in enumerate(product_df["Product Code"]):
+
+        for key, order_quantity_list in order_quantity_dict.items():
+
+            if product == "—":
+                # Insert nan at index
+                product_df.at[product_df.index[i], "Quantity On Sales"] = np.nan
+
+            elif product == key:
+                # Insert quantity at index
+                product_df.at[product_df.index[i],
+                              "Quantity On Sales"] = sum(order_quantity_list)
+
+    # Reorder columns
+    product_df = product_df[["Product Code", "Description",
+                             "Quantity On Hand", "Quantity On Sales"]]
+
+    # Run export_to_excel function to grab final file
+    export_to_excel(product_df)
+
+    # Return product_df
+    # return product_df
+
+
+'''
 Below contains get purchases program.
 '''
 
@@ -418,9 +512,8 @@ def get_purchases(product_df):
         for key, order_quantity_list in order_quantity_dict.items():
 
             if product == "—":
-                # Insert quantity at index
-                product_df.at[product_df.index[i],
-                              "Quantity On Purchase"] = np.nan
+                # Insert nan at index
+                product_df.at[product_df.index[i], "Quantity On Purchase"] = np.nan
 
             elif product == key:
                 # Insert quantity at index
