@@ -168,13 +168,14 @@ def pick_order(product_df):
         elif response in no_list:
             # Run export_to_excel function to grab final file
             export_to_excel(product_df)
+            break
 
         elif (response not in no_list) and (response not in yes_list):
             print("It was a yes or no question. Try again.\n")
 
         else:
             print("Umm. Something went wrong. Imma dip, peace out.")
-            break
+            sys.exit(1)
 
 
 def export_to_excel(dataframe):
