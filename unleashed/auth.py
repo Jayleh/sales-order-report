@@ -1,7 +1,6 @@
 import binascii
 import hashlib
 import hmac
-
 import requests.auth
 
 

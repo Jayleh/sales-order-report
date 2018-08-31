@@ -1,0 +1,106 @@
+{% extends "layout.html" %}
+{% block title %}
+  <title>Cellese Registration</title>
+{% endblock %}
+{% block styles %}
+  <!-- External CSS -->
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/logs.css') }}">
+{% endblock styles %}
+{% block main %}
+  <div id="user-input-card" class="container">
+    <div class="row">
+      <div class="col s12">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="toast" style="{{ category }}">
+                {{ message }}
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+      </div>
+    </div>
+    <div class="row">
+      <div class="col s12">
+        <form method="POST" action="">
+          {{ form.hidden_tag() }}
+          <div class="card">
+            <div class="card-content">
+              <span class="card-title">Registration</span>
+              <div class="form-group">
+                <div class="input-field">
+                  {% if form.username.errors %}
+                    {{ form.username() }}
+                    {{ form.username.label() }}
+                    {% for error in form.username.errors %}
+                      <span class="helper-text" style="color: #f44336">{{ error }}</span>
+                    {% endfor %}
+                  {% else %}
+                    {{ form.username() }}
+                    {{ form.username.label() }}
+                  {% endif%}
+                </div>
+              </div>
+              <div class="form-group">
+                <div class="input-field">
+                  {% if form.email.errors %}
+                    {{ form.email(type="email", class="validate") }}
+                    {{ form.email.label() }}
+                    {% for error in form.email.errors %}
+                      <span class="helper-text" style="color: #f44336">{{ error }}</span>
+                    {% endfor %}
+                  {% else %}
+                    {{ form.email(type="email", class="validate") }}
+                    {{ form.email.label() }}
+                    <span class="helper-text" data-error="Invalid email address." data-success="Email is valid."></span> 
+                  {% endif%}
+                </div>
+              </div>
+              <div class="form-group">
+                <div class="input-field">
+                  {% if form.password.errors %}
+                    {{ form.password() }}
+                    {{ form.password.label() }}
+                    {% for error in form.password.errors %}
+                      <span class="helper-text">{{ error }}</span>
+                    {% endfor %}
+                  {% else %}
+                    {{ form.password() }}
+                    {{ form.password.label() }}
+                  {% endif%}
+                </div>
+              </div>
+              <div class="form-group">
+                <div class="input-field">
+                  {% if form.confirm_password.errors %}
+                    {{ form.confirm_password() }}
+                    {{ form.confirm_password.label() }}
+                    {% for error in form.confirm_password.errors %}
+                      <span class="helper-text">{{ error }}</span>
+                    {% endfor %}
+                  {% else %}
+                    {{ form.confirm_password() }}
+                    {{ form.confirm_password.label() }}
+                  {% endif%}
+                </div>
+              </div>
+            </div>
+            <div class="card-action">
+              <div class="form-group">
+                {{ form.submit(class="btn")}}
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col s12">
+        <small class="text-muted">
+          Already have an account? <a href="{{ url_for('login') }}">Log In</a>
+        </small>
+      </div>
+    </div>
+  </div>
+{% endblock main %}

@@ -1,5 +1,6 @@
 import requests
-from library.authorize.auth import UnleashedAuth
+from unleashed.auth import UnleashedAuth
+# from auth import UnleashedAuth
 
 
 class UnleashedApi(object):

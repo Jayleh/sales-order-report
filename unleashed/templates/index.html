@@ -1,0 +1,83 @@
+{% extends "layout.html" %} {% block title %}
+<title>Sales Order Report</title>
+{% endblock title %} {% block styles %}
+<!-- External styles -->
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/styles.css') }}"> {% endblock styles %} {%
+block main %}
+<div id="intro" class="container">
+  <div class="row">
+    <div class="col s12">
+      <div class="card">
+        <div class="card-content">
+          <span class="card-title">Sales Order Report Program</span>
+          <p>Instructions:</p>
+          <ol>
+            <li>Update Bills of Materials if needed.</li>
+            <li>Create an excel spreadsheet with a header of "Product Code".</li>
+            <li>List the product codes, one for each row, you wish to generate a sales order report below the header.</li>
+            <li>Browse for the excel spreadsheet using the Browse button below or simply drag and drop.</li>
+            <li>Click submit to generate the sales order report. It may take a minute.</li>
+          </ol>
+          <p>You may download a sample template <a href="{{ url_for('static', filename='excel_template/sales_order_template.xlsx') }}"
+              class="blue-text">here</a>.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="container">
+  <div class="row">
+    <div class="col s12 l8">
+      <form method="POST" enctype="multipart/form-data" action="">
+        {{ form.hidden_tag() }}
+        <div class="card">
+          <div class="card-content">
+            <span class="card-title">Product Import</span>
+            <div class="file-field input-field">
+              <div class="btn waves-effect waves-light">
+                <span>Browse</span>
+                <!-- <input type="file" multiple> -->
+                {{ form.upload(type="file") }}
+              </div>
+              <div class="file-path-wrapper">
+                <input class="file-path validate" type="text" placeholder="Upload file">
+              </div>
+            </div>
+          </div>
+          <div class="card-action">
+            {{ form.submit(id="submit-btn", class="btn") }}
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="col s12 l4">
+      {% with messages = get_flashed_messages(with_categories=true) %} {% if messages %} {% for category, message in messages %}
+      <div class="toast" style="{{ category }}">
+        {{ message }}
+      </div>
+      {% endfor %} {% endif %} {% endwith %}
+      <div class="card">
+        <div class="card-content">
+          <span class="card-title">Update Bills of Materials</span>
+          <p>To update the bills of materials database please click to button below.</p>
+          <p id="bom-last-update">Last update on {{ bom_data.last_update }} PST</p>
+        </div>
+        <div class="card-action">
+          <a id="bom-update-btn" href="/update-bom" class="btn waves-effect waves-light">Update</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="fixed-action-btn">
+  <a class="btn-floating btn-large blue">
+    <i class="large material-icons">layers</i>
+  </a>
+  <ul>
+    <li><a href="{{ url_for('logout') }}" class="btn-floating tooltipped red" data-position="left" data-tooltip="Logout"><i
+          class="material-icons">gesture</i></a></li>
+  </ul>
+</div>
+{% endblock main %} {% block scripts %}
+<!-- External JavaScript -->
+<script src="{{ url_for('static', filename='js/index.js') }}"></script> {% endblock scripts %}
