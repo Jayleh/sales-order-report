@@ -1,7 +1,7 @@
 import os
 import datetime as dt
 import pandas as pd
-from unleashed.config import api_id, api_key
+from unleashed import api_id, api_key
 from unleashed.api import UnleashedApi
 
 
