@@ -1,7 +1,7 @@
 import os
 import datetime as dt
 import pandas as pd
-from unleashed import api_id, api_key
+from unleashed.config import api_id, api_key
 from unleashed.api import UnleashedApi
 
 
@@ -112,7 +112,38 @@ def get_bom(bills_of_materials):
     return bom_df
 
 
-def get_soh(product_df):
+def get_soh_response():
+    """
+    API request for bill of materials. Returns all.
+    """
+
+    # Authorize and connect to api
+    auth = configure_request()
+
+    # All item quantity list
+    item_list = []
+
+    # Paginate through arbitrary large number
+    for x in range(100):
+
+        # Get response
+        stock_on_hand = auth.get_request(method=f"StockOnHand/{x+1}?").json()
+
+        # Add items to item_list
+        for item in stock_on_hand["Items"]:
+            item_list.append(item)
+
+        # Break loop if item_count hits max number of orders
+        if stock_on_hand["Pagination"]["PageNumber"] == stock_on_hand["Pagination"]["NumberOfPages"]:
+            break
+
+    # Stock on hand dictionary
+    soh_dict = {"Items": item_list}
+
+    return soh_dict
+
+
+def get_soh(product_df, soh_dict):
     """
     Adds new column of quantity on hand. Calls pick_order function.
     """
@@ -127,34 +158,24 @@ def get_soh(product_df):
 
     print("Counting stock on hand...")
 
-    # Paginate through arbitrary large number
-    for x in range(100):
+    # Grab list of product to enquire
+    product_list = product_df["Product Code"]
 
-        # Get response
-        stock_on_hand = auth.get_request(method=f"StockOnHand/{x+1}?").json()
-
-        # Grab list of product to enquire
-        product_list = product_df["Product Code"]
-
-        # Grab quantity on hand from api response
-        for i, product in enumerate(product_list):
-            for item in stock_on_hand["Items"]:
-                if product == item["ProductCode"]:
-                    try:
-                        product_df.at[product_df.index[i],
-                                      "Description"] = item["ProductDescription"]
-                        product_df.at[product_df.index[i], "Quantity On Hand"] = item["QtyOnHand"]
-                        product_df.at[product_df.index[i],
-                                      "Allocated Quantity"] = item["AllocatedQty"]
-                        product_df.at[product_df.index[i],
-                                      "Available Quantity"] = item["AvailableQty"]
-                    except Exception as e:
-                        print(e)
-                        continue
-
-        # Break loop if item_count hits max number of orders
-        if stock_on_hand["Pagination"]["PageNumber"] == stock_on_hand["Pagination"]["NumberOfPages"]:
-            break
+    # Grab quantity on hand from api response
+    for i, product in enumerate(product_list):
+        for item in soh_dict['Items']:
+            if product == item["ProductCode"]:
+                try:
+                    product_df.at[product_df.index[i],
+                                  "Description"] = item["ProductDescription"]
+                    product_df.at[product_df.index[i], "Quantity On Hand"] = item["QtyOnHand"]
+                    product_df.at[product_df.index[i],
+                                  "Allocated Quantity"] = item["AllocatedQty"]
+                    product_df.at[product_df.index[i],
+                                  "Available Quantity"] = item["AvailableQty"]
+                except Exception as e:
+                    print(e)
+                    continue
 
     # Reorder columns
     product_df = product_df[["Product Code", "Description",

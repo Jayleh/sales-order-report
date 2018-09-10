@@ -5,7 +5,7 @@ from werkzeug.utils import secure_filename
 import pandas as pd
 from unleashed import app, db, mongo, bcrypt
 from unleashed.forms import RegistrationForm, LoginForm, UploadForm
-from unleashed.main import get_bom_response, get_bom, get_soh, get_sales, get_purchases
+from unleashed.main import get_bom_response, get_bom, get_soh_response, get_soh, get_sales, get_purchases
 from unleashed.models import User
 from flask_login import login_user, current_user, logout_user, login_required
 
@@ -33,7 +33,10 @@ def home():
     form = UploadForm()
 
     # Grab bom from mongodb
-    bills_of_materials = mongo.db.unleashed.find_one()
+    bills_of_materials = mongo.db.unleashed.find_one({"name": "bills_of_materials"})
+
+    # Grab soh from mongodb
+    stock_on_hand = mongo.db.unleashed.find_one({"name": "stock_on_hand"})
 
     # Import folder path
     import_dir_name = "unleashed/static/doc/import"
@@ -48,8 +51,8 @@ def home():
             # List all components associated with initial product
             bom_df = get_bom(bills_of_materials)
 
-            # Grab stock quantities and descriptions
-            product_df = get_soh(bom_df)
+            # List all quantities and descriptions
+            product_df = get_soh(bom_df, stock_on_hand)
 
             # Grab quantity on sales
             product_df = get_sales(product_df)
@@ -79,7 +82,7 @@ def home():
 
     reports = check_reports()
 
-    return render_template('index.html', form=form, bom_data=bills_of_materials, reports=reports)
+    return render_template('index.html', form=form, bom_data=bills_of_materials, soh_data=stock_on_hand, reports=reports)
 
 
 @app.route("/delete-reports")
@@ -102,7 +105,7 @@ def delete_reports():
 
 
 @app.route("/register", methods=["GET", "POST"])
-# @login_required
+@login_required
 def register():
     form = RegistrationForm()
     if form.validate_on_submit():
@@ -110,7 +113,8 @@ def register():
         user = User(username=form.username.data, email=form.email.data, password=hashed_password)
         db.session.add(user)
         db.session.commit()
-        flash(f"Account created for {form.username.data}! Please log in.", "success")
+        flash(f"Account created for {form.username.data}! Please log in.",
+              "background-color: #64b5f6;")
         return redirect(url_for("login"))
     return render_template("registration.html", title="Register", form=form)
 
@@ -141,9 +145,18 @@ def logout():
 @login_required
 def bom_data():
     # Find unleashed dictionary in mongodb
-    bom_data = mongo.db.unleashed.find_one()
+    bom_data = mongo.db.unleashed.find_one({"name": "bills_of_materials"})
 
     return jsonify(bom_data["Items"])
+
+
+@app.route("/soh-data")
+@login_required
+def soh_data():
+    # Find unleashed dictionary in mongodb
+    soh_data = mongo.db.unleashed.find_one({"name": "stock_on_hand"})
+
+    return jsonify(soh_data["Items"])
 
 
 @app.route("/update-bom")
@@ -156,6 +169,9 @@ def update_bom():
         # Call scrape function to return all reorder data
         bills_of_materials = get_bom_response()
 
+        # Label collection
+        bills_of_materials["name"] = "bills_of_materials"
+
         # Record time of update
         last_update = dt.datetime.today() - dt.timedelta(hours=7)
         last_update = last_update.strftime("%Y-%m-%d %H:%M:%S")
@@ -163,7 +179,7 @@ def update_bom():
 
         # Replace specific document in collection with data, if not found insert new collection
         unleashed.replace_one(
-            {},
+            {"name": "bills_of_materials"},
             bills_of_materials,
             upsert=True
         )
@@ -174,6 +190,42 @@ def update_bom():
     except Exception as e:
         print(e)
         flash("Bills of Materials update was unsuccessful.",
+              "background-color: #e57373;")
+
+    return redirect(url_for('home'), code=302)
+
+
+@app.route("/update-soh")
+@login_required
+def update_soh():
+    try:
+        # Create unleashed collection
+        unleashed = mongo.db.unleashed
+
+        # Call scrape function to return all reorder data
+        stock_on_hand = get_soh_response()
+
+        # Label collection
+        stock_on_hand["name"] = "stock_on_hand"
+
+        # Record time of update
+        last_update = dt.datetime.today() - dt.timedelta(hours=7)
+        last_update = last_update.strftime("%Y-%m-%d %H:%M:%S")
+        stock_on_hand["last_update"] = last_update
+
+        # Replace specific document in collection with data, if not found insert new collection
+        unleashed.replace_one(
+            {"name": "stock_on_hand"},
+            stock_on_hand,
+            upsert=True
+        )
+
+        flash("Stock on Hand successfully updated.",
+              "background-color: #64b5f6;")
+
+    except Exception as e:
+        print(e)
+        flash("Stock on Hand update was unsuccessful.",
               "background-color: #e57373;")
 
     return redirect(url_for('home'), code=302)

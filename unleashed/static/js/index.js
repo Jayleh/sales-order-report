@@ -11,7 +11,7 @@ function dimPage() {
 }
 
 function disableButtons(buttonList) {
-    //Disable all buttons
+    // Disable all buttons
     buttonList.forEach(function (element) {
         element.classList.add('disabled');
     });
@@ -44,8 +44,9 @@ document.addEventListener('DOMContentLoaded', function () {
     let $browseBtn = document.querySelector('#browse-btn'),
         $submitBtn = document.querySelector('#submit-btn'),
         $bomUpdateBtn = document.querySelector('#bom-update-btn'),
+        $sohUpdateBtn = document.querySelector('#soh-update-btn'),
         $deleteBtn = document.querySelector('#delete-reports-btn'),
-        buttonList = [$browseBtn, $submitBtn, $bomUpdateBtn, $deleteBtn];
+        buttonList = [$browseBtn, $submitBtn, $bomUpdateBtn, $sohUpdateBtn, $deleteBtn];
 
     // Disable button if there are no reports
     let $reports = document.querySelectorAll('.report');
@@ -75,7 +76,20 @@ document.addEventListener('DOMContentLoaded', function () {
         disableButtons(buttonList);
     });
 
+    // Click event on bom update button
     $bomUpdateBtn.addEventListener("click", function () {
+        // Alert with a toast
+        M.toast({ html: 'This may be a minute' })
+
+        // Dimmer
+        dimPage();
+
+        // Disable all buttons
+        disableButtons(buttonList);
+    });
+
+    // Click event on soh update button
+    $sohUpdateBtn.addEventListener("click", function () {
         // Alert with a toast
         M.toast({ html: 'This may be a minute' })
 

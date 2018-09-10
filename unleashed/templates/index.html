@@ -12,7 +12,7 @@
           <span class="card-title">Sales Order Report Program</span>
           <p>Instructions:</p>
           <ol>
-            <li>Update Bills of Materials if needed.</li>
+            <li>Update Bills of Materials and Stock on Hand if needed.</li>
             <li>Create an excel spreadsheet with a header of "Product Code".</li>
             <li>List the product codes, one for each row, you wish to generate a sales order report below the header.</li>
             <li>Browse for the excel spreadsheet using the Browse button below or simply drag and drop.</li>
@@ -25,9 +25,46 @@
     </div>
   </div>
 </div>
-<div class="container">
+<div id="user-input" class="container">
   <div class="row">
-    <div class="col s12 l8">
+    <div class="col s12">
+      {% with messages = get_flashed_messages(with_categories=true) %} {% if messages %} {% for category, message in
+      messages %}
+      <div id="flash-toast" class="toast" style="{{ category }}">
+        {{ message }}
+        <i id="flash-close" class="material-icons">cancel</i>
+      </div>
+      {% endfor %} {% endif %} {% endwith %}
+    </div>
+  </div>
+  <div class="row">
+    <div class="col s12 l6">
+      <div class="card">
+        <div class="card-content">
+          <span class="card-title">Update Bills of Materials</span>
+          <p>To update the bills of materials database please click to button below.</p>
+          <p class="last-update">Last update on {{ bom_data.last_update }} PST</p>
+        </div>
+        <div class="card-action">
+          <a id="bom-update-btn" href="{{ url_for('update_bom') }}" class="btn waves-effect waves-light update-btn">Update</a>
+        </div>
+      </div>
+    </div>
+    <div class="col s12 l6">
+      <div class="card">
+        <div class="card-content">
+          <span class="card-title">Update Stock On Hand</span>
+          <p>To update the stock on hand database please click to button below.</p>
+          <p class="last-update">Last update on {{ soh_data.last_update }} PST</p>
+        </div>
+        <div class="card-action">
+          <a id="soh-update-btn" href="{{ url_for('update_soh') }}" class="btn waves-effect waves-light update-btn">Update</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col s12">
       <form method="POST" enctype="multipart/form-data" action="">
         {{ form.hidden_tag() }}
         <div class="card">
@@ -55,25 +92,6 @@
           </div>
         </div>
       </form>
-    </div>
-    <div class="col s12 l4">
-      {% with messages = get_flashed_messages(with_categories=true) %} {% if messages %} {% for category, message in
-      messages %}
-      <div id="flash-toast" class="toast" style="{{ category }}">
-        {{ message }}
-        <i id="flash-close" class="material-icons">cancel</i>
-      </div>
-      {% endfor %} {% endif %} {% endwith %}
-      <div class="card">
-        <div class="card-content">
-          <span class="card-title">Update Bills of Materials</span>
-          <p>To update the bills of materials database please click to button below.</p>
-          <p id="bom-last-update">Last update on {{ bom_data.last_update }} PST</p>
-        </div>
-        <div class="card-action">
-          <a id="bom-update-btn" href="{{ url_for('update_bom') }}" class="btn waves-effect waves-light">Update</a>
-        </div>
-      </div>
     </div>
   </div>
   <div class="row">
