@@ -1,5 +1,4 @@
 import os
-from tkinter import Tk, filedialog
 import datetime as dt
 from flask import render_template, jsonify, redirect, url_for, flash, request
 from werkzeug.utils import secure_filename
@@ -11,13 +10,21 @@ from unleashed.models import User
 from flask_login import login_user, current_user, logout_user, login_required
 
 
-def empty_folder():
-    # Delete any files existing in doc
-    dir_name = 'unleashed/static/doc/import'
+def empty_folder(dir_name):
+    # Delete any files existing in import folder
     files = os.listdir(dir_name)
 
     for file in files:
         os.remove(os.path.join(dir_name, file))
+
+
+def check_reports():
+    # See if any files in export folder
+    dir_name = "unleashed/static/doc/export"
+
+    files = os.listdir(dir_name)
+
+    return files
 
 
 @app.route("/", methods=['GET', 'POST'])
@@ -27,6 +34,9 @@ def home():
 
     # Grab bom from mongodb
     bills_of_materials = mongo.db.unleashed.find_one()
+
+    # Import folder path
+    import_dir_name = "unleashed/static/doc/import"
 
     if form.validate_on_submit():
 
@@ -48,22 +58,13 @@ def home():
             product_df = get_purchases(product_df)
 
             # Grab datetime
-            today = dt.datetime.now().strftime(format="%Y%m%d")
+            today = dt.datetime.now().strftime(format="%Y%m%d%M%S")
 
-            # Use tkinter to open dialog box to save file
-            root = Tk()
-            root.withdraw()
-            root.lift()
-            root.attributes('-topmost', True)
+            # Save report to export folder
+            SAVING_PATH = f"unleashed/static/doc/export/{today}_sales_order_report.xlsx"
+            product_df.to_excel(SAVING_PATH, index=False, encoding='utf-8')
 
-            SAVING_PATH = filedialog.asksaveasfile(mode='w',
-                                                   defaultextension='.xlsx',
-                                                   filetypes=[('Excel', '.xlsx')],
-                                                   initialfile=f'{today}_sales_order_report.xlsx')
-
-            product_df.to_excel(SAVING_PATH.name, index=False, encoding='utf-8')
-
-            empty_folder()
+            empty_folder(import_dir_name)
 
             flash("Sales Order Report successfully generated.",
                   "background-color: #64b5f6;")
@@ -72,11 +73,32 @@ def home():
 
         except Exception as e:
             print(e)
-            empty_folder()
+            empty_folder(import_dir_name)
             flash("Sales Order Report generation was unsuccessful.",
                   "background-color: #e57373;")
 
-    return render_template('index.html', form=form, bom_data=bills_of_materials)
+    reports = check_reports()
+
+    return render_template('index.html', form=form, bom_data=bills_of_materials, reports=reports)
+
+
+@app.route("/delete-reports")
+@login_required
+def delete_reports():
+    export_dir_name = "unleashed/static/doc/export"
+
+    try:
+        # Empty export folder
+        empty_folder(export_dir_name)
+
+        flash("Sales reports successfully deleted.",
+              "background-color: #64b5f6;")
+    except Exception as e:
+        print(e)
+        flash("Uh oh. Something went wrong.",
+              "background-color: #e57373;")
+
+    return redirect(url_for('home'), code=302)
 
 
 @app.route("/register", methods=["GET", "POST"])
