@@ -14,6 +14,9 @@ app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', '')
 app.config['MONGO_DBNAME'] = os.environ['MONGO_DBNAME']
 app.config['MONGO_URI'] = os.environ['MONGODB_URI']
 
+api_id = os.environ['api_id']
+api_key = (os.environ['api_key']).encode('utf-8')
+
 db = SQLAlchemy(app)
 mongo = PyMongo(app)
 bcrypt = Bcrypt(app)
