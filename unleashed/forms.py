@@ -8,7 +8,7 @@ from unleashed.models import User
 class UploadForm(FlaskForm):
     upload = FileField('Choose File', validators=[
         FileRequired(),
-        FileAllowed(['xls', 'xlsx'], 'Excel files only!')
+        FileAllowed(['xls', 'xlsx'], "File must be an excel file.")
     ])
     submit = SubmitField("SUBMIT")
 

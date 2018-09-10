@@ -2,8 +2,8 @@
 <title>Sales Order Report</title>
 {% endblock title %} {% block styles %}
 <!-- External styles -->
-<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/styles.css') }}"> {% endblock styles %} {%
-block main %}
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/styles.css') }}"> {% endblock styles %}
+{% block main %}
 <div id="intro" class="container">
   <div class="row">
     <div class="col s12">
@@ -34,26 +34,34 @@ block main %}
           <div class="card-content">
             <span class="card-title">Product Import</span>
             <div class="file-field input-field">
-              <div class="btn waves-effect waves-light">
+              <div id="browse-btn" class="btn">
                 <span>Browse</span>
-                <!-- <input type="file" multiple> -->
                 {{ form.upload(type="file") }}
               </div>
               <div class="file-path-wrapper">
+                {% if form.upload.errors %}
                 <input class="file-path validate" type="text" placeholder="Upload file">
+                {% for error in form.upload.errors %}
+                <span class="helper-text" style="color: #f44336">{{ error }}</span>
+                {% endfor %}
+                {% else %}
+                <input class="file-path validate" type="text" placeholder="Upload file">
+                {% endif %}
               </div>
             </div>
           </div>
           <div class="card-action">
-            {{ form.submit(id="submit-btn", class="btn") }}
+            {{ form.submit(id="submit-btn", class="btn disabled") }}
           </div>
         </div>
       </form>
     </div>
     <div class="col s12 l4">
-      {% with messages = get_flashed_messages(with_categories=true) %} {% if messages %} {% for category, message in messages %}
-      <div class="toast" style="{{ category }}">
+      {% with messages = get_flashed_messages(with_categories=true) %} {% if messages %} {% for category, message in
+      messages %}
+      <div id="flash-toast" class="toast" style="{{ category }}">
         {{ message }}
+        <i id="flash-close" class="material-icons">cancel</i>
       </div>
       {% endfor %} {% endif %} {% endwith %}
       <div class="card">
@@ -63,7 +71,35 @@ block main %}
           <p id="bom-last-update">Last update on {{ bom_data.last_update }} PST</p>
         </div>
         <div class="card-action">
-          <a id="bom-update-btn" href="/update-bom" class="btn waves-effect waves-light">Update</a>
+          <a id="bom-update-btn" href="{{ url_for('update_bom') }}" class="btn waves-effect waves-light">Update</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col s12">
+      <div class="card">
+        <div class="card-content">
+          <span class="card-title">Completed Sales Reports</span>
+          {% for report in reports %}
+          <a href="static/doc/export/{{ report }}" class="report">
+            <p>{{ report }}</p>
+          </a>
+          {% endfor%}
+        </div>
+        <div class="card-action">
+          <!-- Modal Trigger -->
+          <button id="delete-reports-btn" data-target="modal1" class="btn modal-trigger">Delete Files</button>
+          <!-- Modal Structure -->
+          <div id="modal1" class="modal">
+            <div class="modal-content">
+              <p>Are you sure you want to delete all sales order reports?</p>
+            </div>
+            <div class="modal-footer">
+              <a href="javascript:voide(0)" class="btn waves-effect waves-light modal-close">No</a>
+              <a href="{{ url_for('delete_reports') }}" class="btn waves-effect waves-light modal-close red">Yes</a>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -78,6 +114,11 @@ block main %}
           class="material-icons">gesture</i></a></li>
   </ul>
 </div>
-{% endblock main %} {% block scripts %}
+<div class="spinner">
+  <div class="dot1"></div>
+  <div class="dot2"></div>
+</div>
+{% endblock main %}
+{% block scripts %}
 <!-- External JavaScript -->
 <script src="{{ url_for('static', filename='js/index.js') }}"></script> {% endblock scripts %}
