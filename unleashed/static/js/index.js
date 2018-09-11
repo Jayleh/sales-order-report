@@ -1,13 +1,13 @@
 function dimPage() {
     // Dim page contents and display preloader
     let $main = document.querySelectorAll('.container'),
-        $spinner = document.querySelector('.spinner');
+        $preloader = document.querySelector('#preloader-container');
 
     $main.forEach(function (element) {
         element.setAttribute("style", "opacity: 0.2;")
     });
 
-    $spinner.setAttribute("style", "display: unset;")
+    $preloader.setAttribute("style", "display: unset;")
 }
 
 function disableButtons(buttonList) {

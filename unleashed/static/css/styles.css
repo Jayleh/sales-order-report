@@ -26,15 +26,20 @@ html {
 }
 
 /* Preloader */
-.spinner {
+#preloader-container {
     display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-60%, -100%);
+}
+
+.spinner {
     /* margin: 100px auto; */
     width: 45px;
     height: 45px;
-    position: absolute;
+    position: relative;
     text-align: center;
-    top: 45%;
-    left: 47%;
 
     -webkit-animation: sk-rotate 2.0s infinite linear;
     animation: sk-rotate 2.0s infinite linear;
