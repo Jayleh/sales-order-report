@@ -100,10 +100,12 @@
         <div class="card-content">
           <span class="card-title">Completed Sales Reports</span>
           {% for report in reports %}
+          {% if report != ".gitignore" %}
           <a href="static/doc/export/{{ report }}" class="report">
             <p>{{ report }}</p>
           </a>
-          {% endfor%}
+          {% endif %}
+          {% endfor %}
         </div>
         <div class="card-action">
           <!-- Modal Trigger -->
