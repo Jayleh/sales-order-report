@@ -22,7 +22,11 @@ html {
 
 .toast {
     position: unset;
-    margin-top: 8px;
+    margin-top: 0px;
+}
+
+#flash-toast {
+    margin-bottom: 10px;
 }
 
 /* Preloader */
