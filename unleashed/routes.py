@@ -27,6 +27,13 @@ def check_reports():
     return files
 
 
+def get_time_now():
+    time_now = dt.datetime.today() - dt.timedelta(hours=7)
+    time_now = time_now.strftime("%Y/%m/%d %-I:%m %p")
+
+    return time_now
+
+
 @app.route("/", methods=['GET', 'POST'])
 @login_required
 def home():
@@ -61,7 +68,7 @@ def home():
             product_df = get_purchases(product_df)
 
             # Grab datetime
-            today = dt.datetime.now().strftime(format="%Y%m%d%M%S")
+            today = dt.datetime.now().strftime(format="%Y%m%d%H%M%S")
 
             # Save report to export folder
             SAVING_PATH = f"unleashed/static/doc/export/{today}_sales_order_report.xlsx"
@@ -173,8 +180,7 @@ def update_bom():
         bills_of_materials["name"] = "bills_of_materials"
 
         # Record time of update
-        last_update = dt.datetime.today() - dt.timedelta(hours=7)
-        last_update = last_update.strftime("%Y-%m-%d %H:%M:%S")
+        last_update = get_time_now()
         bills_of_materials["last_update"] = last_update
 
         # Replace specific document in collection with data, if not found insert new collection
@@ -209,8 +215,7 @@ def update_soh():
         stock_on_hand["name"] = "stock_on_hand"
 
         # Record time of update
-        last_update = dt.datetime.today() - dt.timedelta(hours=7)
-        last_update = last_update.strftime("%Y-%m-%d %H:%M:%S")
+        last_update = get_time_now()
         stock_on_hand["last_update"] = last_update
 
         # Replace specific document in collection with data, if not found insert new collection
