@@ -10,8 +10,9 @@ def check_folder():
     files = os.listdir(path)
 
     try:
-        import_file = files[0]
-        return import_file
+        for file in files:
+            if file != ".gitignore":
+                return file
     except IndexError:
         print("No file uploaded.")
 
