@@ -68,10 +68,11 @@ def home():
             product_df = get_purchases(product_df)
 
             # Grab datetime
-            today = dt.datetime.now().strftime(format="%Y%m%d%H%M%S")
+            pst_today = dt.datetime.today() - dt.timedelta(hours=7)
+            pst_today = pst_today.strftime(format="%Y%m%d%H%M%S")
 
             # Save report to export folder
-            SAVING_PATH = f"unleashed/static/doc/export/{today}_sales_order_report.xlsx"
+            SAVING_PATH = f"unleashed/static/doc/export/{pst_today}_sales_order_report.xlsx"
             product_df.to_excel(SAVING_PATH, index=False, encoding='utf-8')
 
             empty_folder(import_dir_name)
