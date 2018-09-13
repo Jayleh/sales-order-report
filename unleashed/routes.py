@@ -29,7 +29,7 @@ def check_reports():
 
 def get_time_now():
     time_now = dt.datetime.today() - dt.timedelta(hours=7)
-    time_now = time_now.strftime("%-m/%d/%Y %-I:%M %p")
+    time_now = time_now.strftime("%-m/%d/%y %-I:%M %p")
 
     return time_now
 
