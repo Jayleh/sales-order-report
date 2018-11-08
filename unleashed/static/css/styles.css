@@ -29,6 +29,10 @@ html {
     margin-bottom: 10px;
 }
 
+#flash-close:hover {
+    cursor: pointer;
+}
+
 /* Preloader */
 #preloader-container {
     display: none;

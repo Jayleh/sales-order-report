@@ -66,14 +66,19 @@ def get_bom(bills_of_materials):
         # Add product as key with the value as a list
         bom_dict[product] = []
 
+    unit_cost = {}
+
     # First run to grab bom line items of final product
     for product, line_list in bom_dict.items():
         for bill in bills_of_materials["Items"]:
             if bill["Product"]["ProductCode"] == product:
+                unit_cost[product] = bill["Product"]["LastCost"]
                 for line in bill["BillOfMaterialsLines"]:
                     line_item = line["Product"]["ProductCode"]
+                    line_item_cost = line["UnitCost"]
                     if line_item != 'LBR':
                         line_list.append(line_item)
+                        unit_cost[line_item] = line_item_cost
 
     # Find bill of materials for those line items
     for product, line_list in bom_dict.items():
@@ -83,14 +88,17 @@ def get_bom(bills_of_materials):
             for bill in bills_of_materials["Items"]:
                 # If product code in response matches line item name
                 if bill["Product"]["ProductCode"] == item:
+                    unit_cost[item] = bill["Product"]["LastCost"]
                     # For each line item in the bom lines, reversed
                     for line in reversed(bill["BillOfMaterialsLines"]):
                         # Assign line item as variable
                         line_item = line["Product"]["ProductCode"]
+                        line_item_cost = line["UnitCost"]
                         # Don't want labor SKU
                         if line_item != 'LBR':
                             # Insert line item into line item list in bom_dict
                             line_list.insert(i + 1, line_item)
+                            unit_cost[line_item] = line_item_cost
 
     # See if we can append bom_list after each product in original excel file
     product_list = [product for product in product_df["Product Code"]]
@@ -109,6 +117,13 @@ def get_bom(bills_of_materials):
 
     # Create bom dataframe
     bom_df = pd.DataFrame({"Product Code": full_bom_list})
+
+    bom_df["Unit Cost"] = ""
+
+    for i, row in bom_df.iterrows():
+        for product, cost in unit_cost.items():
+            if row["Product Code"] == product:
+                bom_df.at[bom_df.index[i], "Unit Cost"] = cost
 
     return bom_df
 
@@ -177,10 +192,6 @@ def get_soh(product_df, soh_dict):
                 except Exception as e:
                     print(e)
                     continue
-
-    # Reorder columns
-    product_df = product_df[["Product Code", "Description",
-                             "Quantity On Hand", "Allocated Quantity", "Available Quantity"]]
 
     # Return product_df
     return product_df
@@ -313,6 +324,10 @@ def get_purchases(product_df):
                 # Insert quantity at index
                 product_df.at[product_df.index[i],
                               "Quantity On Purchases"] = sum(order_quantity_list)
+
+    # Reorder columns
+    product_df = product_df[["Product Code", "Description", "Quantity On Hand", "Allocated Quantity",
+                             "Available Quantity", "Quantity On Sales", "Quantity On Purchases", "Unit Cost"]]
 
     # Return product_df
     return product_df

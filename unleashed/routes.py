@@ -5,7 +5,8 @@ from werkzeug.utils import secure_filename
 import pandas as pd
 from unleashed import app, db, mongo, bcrypt
 from unleashed.forms import RegistrationForm, LoginForm, UploadForm
-from unleashed.main import get_bom_response, get_bom, get_soh_response, get_soh, get_sales, get_purchases
+from unleashed.main import (get_bom_response, get_bom, get_soh_response,
+                            get_soh, get_sales, get_purchases)
 from unleashed.models import User
 from flask_login import login_user, current_user, logout_user, login_required
 
@@ -29,7 +30,7 @@ def check_reports():
 
 def get_time_now():
     time_now = dt.datetime.today() - dt.timedelta(hours=7)
-    time_now = time_now.strftime("%-m/%d/%y %-I:%M %p")
+    time_now = time_now.strftime("%m/%d/%y %I:%M %p")
 
     return time_now
 
@@ -74,6 +75,11 @@ def home():
             # Save report to export folder
             SAVING_PATH = f"unleashed/static/doc/export/{pst_today}_sales_order_report.xlsx"
             product_df.to_excel(SAVING_PATH, index=False, encoding='utf-8')
+
+            # with open(SAVING_PATH, "rb") as fh:
+            #     response = HttpResponse(fh.read(), content_type="text/csv")
+            #     response["Content-Disposition"] = "inline; filename=" + os.path.basename(SAVING_PATH)
+            #     return response
 
             empty_folder(import_dir_name)
 
@@ -196,6 +202,7 @@ def update_bom():
 
     except Exception as e:
         print(e)
+        raise
         flash("Bills of Materials update was unsuccessful.",
               "background-color: #e57373;")
 
